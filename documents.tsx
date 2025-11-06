@@ -4,20 +4,21 @@ The new folder structure for each feature (like reviews, accounts, etc.) should 
 
 src/
 └── features/
-    └── docXplorer/
-        ├── pages/
-        │   └── Documents.tsx
-        ├── components/
-        │   ├── DashboardHeader.tsx
-        │   ├── DocumentStats.tsx
-        │   ├── DocumentRepository.tsx
-        │   ├── AssignDialog.tsx
-        │   └── DocumentDetail.tsx
-        ├── hooks/
-        ├── models/
-        ├── services/
-        ├── utils/
-        └── test/
+    └── review/
+        └── docXplorer/
+            ├── pages/
+            │   └── Documents.tsx
+            ├── components/
+            │   ├── DashboardHeader.tsx
+            │   ├── DocumentStats.tsx
+            │   ├── DocumentRepository.tsx
+            │   ├── AssignDialog.tsx
+            │   └── DocumentDetail.tsx
+            ├── hooks/
+            ├── models/
+            ├── services/
+            ├── utils/
+            └── test/
 
 keep it like this and use the document details inside the documents in the main page and that will be called in the app.tsx
 Currently, all my code is scattered and not well organized.
