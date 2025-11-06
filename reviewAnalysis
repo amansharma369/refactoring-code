@@ -925,6 +925,7 @@ const App = () => (
             </Route>
  
             {/* Review */}
+            // make the correction here review is the parent class and analysis and documents are the child so keep the route in a way that they load when required 
             <Route path="/iaurora-review" element={<IAuroraReview />} />
             <Route path="/review" element={<Outlet />}>
               <Route path="analysis" element={<ReviewAnalysis />}>
@@ -933,18 +934,10 @@ const App = () => (
             </Route>
  
             {/* Documents */}
-            {/* <Route path="/documents" element={<Outlet />}>
-              <Route index element={<Documents />} />
-              <Route path=":id" element={<DocumentDetail />} />
-            </Route> */}
 
             <Route path="/documents" element={<Documents />}>
               <Route path=":id" element={<DocumentDetail />} />
             </Route>
-
-            {/* <Route path="/documents" element={<Documents />}>
-              <Route path=":id" element={<DocumentDetail />} />
-            </Route> */}
  
             {/* Other routes */}
             <Route path="/doc-central" element={<DocCentral />} />
@@ -961,7 +954,6 @@ const App = () => (
 );
  
 export default App;
- 
 
 
 for now, just give the divide into components and pages and just run them. Thats it. Models and further improvemenst, we will do later. Thanks a lot.
