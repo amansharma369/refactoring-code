@@ -15,27 +15,27 @@ features/
 
 Currently, all my code is scattered and not well organized.
 
-The documnets page currently has some main sections:
+The reviewAnalysis.tsx page currently has some main sections:
 
-A Dashboard section — with the heading “Doc Review”.
+A Dashboard section — with the heading “AI Analysis”.
 
-A Document Repository section.
+A Analysis Reports section.
 
 I want you to:
 
 Split the current documents page into n separate components:
 
 
-Place these components inside the features/docXplorer/components/ folder.
+Place these components inside the features/ai-analysis/components/ folder.
 
-Refactor the main page file (documents.tsx) inside features/docXplorer/pages/ to:
+Refactor the main page file (reviewAnalysis.tsx) inside features/ai-analysis/pages/ to:
 
 Import and render these components as needed.
 
 Use React Router’s Outlet (or Next.js equivalent if applicable) to dynamically render either the dashboard or directory view when required.
 
 
-The reviewAnalysis code for your reference
+The reviewAnalysis.tsx code for your reference
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
