@@ -1,1 +1,636 @@
-eryukio
+I have a docXplorer page in my React (or Next.js) application. I’m refactoring the codebase to follow an enterprise folder structure under the features directory.
+
+The new folder structure for each feature (like reviews, accounts, etc.) should be as follows:
+
+features/
+  ai-analysis/
+    pages/
+    components/
+    models/
+    services/
+    hooks/
+    utils/
+    test/
+
+
+Currently, all my code is scattered and not well organized.
+
+The documnets page currently has some main sections:
+
+A Dashboard section — with the heading “Doc Review”.
+
+A Document Repository section.
+
+I want you to:
+
+Split the current documents page into n separate components:
+
+
+Place these components inside the features/docXplorer/components/ folder.
+
+Refactor the main page file (documents.tsx) inside features/docXplorer/pages/ to:
+
+Import and render these components as needed.
+
+Use React Router’s Outlet (or Next.js equivalent if applicable) to dynamically render either the dashboard or directory view when required.
+
+
+The reviewAnalysis code for your reference
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { FileText, Tag, Search, Eye, FolderOpen } from "lucide-react";
+
+type AnalysisReport = {
+  arid: string;
+  title: string;
+  date: string;
+  docs: number;
+  score: number;
+  responsiveDocs: number;
+  projectId: string;
+};
+
+type Project = {
+  id: string;
+  name: string;
+};
+
+const dummyProjects: Project[] = [
+  { id: "proj-001", name: "Smith Ltd Contract Review" },
+  { id: "proj-002", name: "Q4 Compliance Audit" },
+  { id: "proj-003", name: "Patent Research Initiative" },
+  { id: "proj-004", name: "Discovery Phase 2024" },
+];
+
+const dummyReports: AnalysisReport[] = [
+  { arid: "AR-001", title: "Q4 Compliance Review", date: "2024-01-15", docs: 24, score: 87, responsiveDocs: 18, projectId: "proj-002" },
+  { arid: "AR-002", title: "Contract Analysis - Smith Ltd", date: "2024-01-14", docs: 12, score: 92, responsiveDocs: 10, projectId: "proj-001" },
+  { arid: "AR-003", title: "Patent Prior Art Search", date: "2024-01-12", docs: 45, score: 78, responsiveDocs: 32, projectId: "proj-003" },
+  { arid: "AR-004", title: "Discovery Document Review", date: "2024-01-10", docs: 67, score: 83, responsiveDocs: 48, projectId: "proj-004" },
+  { arid: "AR-005", title: "Regulatory Filing Check", date: "2024-01-08", docs: 15, score: 95, responsiveDocs: 14, projectId: "proj-002" },
+];
+
+export default function ReviewAnalysis() {
+  const navigate = useNavigate();
+  const [search, setSearch] = useState("");
+  const [selectedReport, setSelectedReport] = useState<AnalysisReport | null>(null);
+  const [selectedProject, setSelectedProject] = useState("proj-001");
+
+  // Filter reports by project
+  const projectFilteredReports = dummyReports.filter(report => report.projectId === selectedProject);
+
+  const totalScanned = projectFilteredReports.reduce((sum, report) => sum + report.docs, 0);
+  const responsiveDocs = projectFilteredReports.reduce((sum, report) => sum + report.responsiveDocs, 0);
+  const responsivePercent = totalScanned > 0 ? ((responsiveDocs / totalScanned) * 100).toFixed(1) : "0.0";
+  const keywordsMatched = 3;
+  const totalKeywords = 100;
+  const tagsMatched = 5;
+  const totalTags = 100;
+
+  const filteredReports = projectFilteredReports.filter(
+    (report) =>
+      report.arid.toLowerCase().includes(search.toLowerCase()) ||
+      report.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">AI Analysis</h1>
+          <p className="text-muted-foreground mt-1">
+            Analyze document scanning and review performance
+          </p>
+        </div>
+        <div className="flex items-center gap-2 min-w-[300px]">
+          <FolderOpen className="h-5 w-5 text-muted-foreground shrink-0" />
+          <Select value={selectedProject} onValueChange={setSelectedProject}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a project" />
+            </SelectTrigger>
+            <SelectContent>
+              {dummyProjects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  {project.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Top 3 cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Documents Scanned</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{totalScanned}</div>
+            <p className="text-xs text-muted-foreground">Total documents processed</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Reports Generated</CardTitle>
+            <FileText className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{projectFilteredReports.length}</div>
+            <p className="text-xs text-muted-foreground">Analysis reports created</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Responsive</CardTitle>
+            <FileText className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{responsiveDocs} ({responsivePercent}%)</div>
+            <p className="text-xs text-muted-foreground">Documents matched</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Keywords and Tags cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Keywords Matched</CardTitle>
+            <Search className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{keywordsMatched}/{totalKeywords}</div>
+            <p className="text-xs text-muted-foreground">Unique keywords found</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Tags Matched</CardTitle>
+            <Tag className="h-4 w-4 text-accent" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{tagsMatched}/{totalTags}</div>
+            <p className="text-xs text-muted-foreground">Classification tags applied</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Analysis Report Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Analysis Reports</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-9"
+              placeholder="Search by ARID or title..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ARID</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Docs</TableHead>
+                <TableHead>Score (%)</TableHead>
+                <TableHead>Responsive</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredReports.map((report) => (
+                <TableRow key={report.arid}>
+                  <TableCell className="font-medium">{report.arid}</TableCell>
+                  <TableCell>{report.title}</TableCell>
+                  <TableCell>{report.date}</TableCell>
+                  <TableCell>{report.docs}</TableCell>
+                  <TableCell>{report.score}%</TableCell>
+                  <TableCell>{report.responsiveDocs}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => navigate(`/review/analysis/${report.arid}`)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+analysisReportDetails.tsx
+import { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ArrowLeft, Download } from "lucide-react";
+import DownloadReportDialog from "@/components/analysis/DownloadReportDialog";
+
+type AnalysisReport = {
+  arid: string;
+  title: string;
+  date: string;
+  docs: number;
+  score: number;
+  responsiveDocs: number;
+  projectId: string;
+  status: string;
+  context: string;
+  keywords: string[];
+  tags: string[];
+  totalSize: string;
+  docTypes: string[];
+  extractedText: string;
+};
+
+const dummyReports: Record<string, AnalysisReport> = {
+  "AR-001": {
+    arid: "AR-001",
+    title: "Q4 Compliance Review",
+    date: "2024-01-15 14:30",
+    docs: 24,
+    score: 87,
+    responsiveDocs: 18,
+    projectId: "proj-002",
+    status: "completed",
+    context: "Quarterly compliance review focusing on regulatory requirements and internal policy adherence. Analysis covers financial reporting, data protection measures, and operational compliance across multiple departments.",
+    keywords: ["compliance", "regulatory", "audit", "financial reporting", "data protection", "policy adherence"],
+    tags: ["Q4-2024", "Compliance", "Financial", "Regulatory", "High-Priority"],
+    totalSize: "156 MB",
+    docTypes: ["PDF", "DOCX", "XLSX"],
+    extractedText: `COMPLIANCE REVIEW SUMMARY - Q4 2024
+
+Executive Summary:
+This comprehensive review examines compliance across all operational units for the fourth quarter of 2024. Key findings indicate strong adherence to regulatory frameworks with minor improvements needed in documentation practices.
+
+Key Findings:
+1. Financial Reporting: All quarterly reports submitted on time with 98% accuracy rate
+2. Data Protection: GDPR compliance maintained across all departments
+3. Internal Policies: 95% adherence rate to updated internal guidelines
+4. Risk Assessment: Medium-risk items identified in procurement process
+
+Recommendations:
+- Enhance documentation standardization in procurement
+- Implement additional training for data handling procedures
+- Review and update legacy policy documents by Q1 2025
+
+Detailed Analysis:
+The analysis covered 24 documents across multiple departments including Finance, Operations, Legal, and IT. Document review revealed consistent compliance with external regulatory requirements...`
+  },
+  "AR-002": {
+    arid: "AR-002",
+    title: "Contract Analysis - Smith Ltd",
+    date: "2024-01-14 10:15",
+    docs: 12,
+    score: 92,
+    responsiveDocs: 10,
+    projectId: "proj-001",
+    status: "completed",
+    context: "Comprehensive contract review for Smith Ltd partnership agreement. Analysis includes terms and conditions, liability clauses, payment terms, and compliance with industry standards.",
+    keywords: ["contract", "terms", "liability", "payment", "partnership", "agreement"],
+    tags: ["Smith-Ltd", "Contract", "Legal", "Partnership", "High-Value"],
+    totalSize: "45 MB",
+    docTypes: ["PDF", "DOCX"],
+    extractedText: `CONTRACT ANALYSIS REPORT - SMITH LTD
+
+Contract Overview:
+Multi-year partnership agreement between parties dated January 2024. Total contract value of $2.5M over 36 months with quarterly payment terms.
+
+Key Terms Identified:
+- Service Level Agreement: 99.5% uptime guarantee
+- Payment Schedule: Net 30 days from invoice date
+- Termination Clause: 90-day notice period required
+- Liability Cap: Limited to contract value
+
+Risk Assessment:
+Low to medium risk profile. Standard industry terms with appropriate safeguards in place. Intellectual property clauses clearly defined...`
+  }
+};
+
+export default function AnalysisReportDetail() {
+  const { arid } = useParams<{ arid: string }>();
+  const navigate = useNavigate();
+  const [downloadDialogOpen, setDownloadDialogOpen] = useState(false);
+  
+  const report = arid ? dummyReports[arid] : null;
+
+  if (!report) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={() => navigate(-1)}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back
+        </Button>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">Report not found</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const handleDownload = () => {
+    setDownloadDialogOpen(true);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Button variant="ghost" onClick={() => navigate(-1)}>
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to Analysis
+      </Button>
+
+      {/* Header Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <CardTitle className="text-3xl">{report.arid}</CardTitle>
+                <Badge 
+                  variant={report.status === "completed" ? "default" : "secondary"}
+                  className="capitalize"
+                >
+                  {report.status}
+                </Badge>
+              </div>
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                <span>{report.date}</span>
+                <span>•</span>
+                <span>Confidence Score: <span className="font-semibold text-foreground">{report.score}%</span></span>
+              </div>
+            </div>
+            <Button onClick={handleDownload}>
+              <Download className="h-4 w-4 mr-2" />
+              Download Report
+            </Button>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Left Column - Context, Keywords, Tags */}
+        <div className="md:col-span-2 space-y-6">
+          {/* Context Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Context</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {report.context}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Keywords Used */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Keywords Used</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {report.keywords.map((keyword, index) => (
+                  <Badge key={index} variant="secondary" className="px-3 py-1">
+                    {keyword}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tags Used */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Tags Used</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {report.tags.map((tag, index) => (
+                  <Badge key={index} variant="outline" className="px-3 py-1">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Extracted Text */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Extracted Text</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[400px] w-full rounded-md border p-4">
+                <pre className="text-sm whitespace-pre-wrap font-mono text-muted-foreground">
+                  {report.extractedText}
+                </pre>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column - Document Summary */}
+        <div className="md:col-span-1">
+          <Card className="sticky top-6">
+            <CardHeader>
+              <CardTitle className="text-lg">Document Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Number of Documents</p>
+                <p className="text-2xl font-bold">{report.docs}</p>
+              </div>
+              
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Total Size</p>
+                <p className="text-xl font-semibold">{report.totalSize}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">Document Types</p>
+                <div className="flex flex-wrap gap-2">
+                  {report.docTypes.map((type, index) => (
+                    <Badge key={index} variant="default">
+                      {type}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-1">Responsive Documents</p>
+                <p className="text-xl font-semibold">{report.responsiveDocs} / {report.docs}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <DownloadReportDialog
+        open={downloadDialogOpen}
+        onOpenChange={setDownloadDialogOpen}
+        reportId={report.arid}
+      />
+    </div>
+  );
+}
+
+
+
+
+
+
+also the route code(app.tsx) for your reference- 
+// src/App.tsx
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+ 
+import { AppLayout } from "./components/layout/AppLayout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+ 
+// Pages
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Clients from "./pages/Clients";
+import Engagements from "./pages/Engagements";
+import Projects from "./pages/Projects";
+import CommandCentreUsers from "./pages/CommandCentreUsers"
+import UserInfo from "./pages/UserInfo";
+import TimelogEnhanced from "./pages/TimelogEnhanced";
+import Tickets from "./pages/Tickets";
+import IAuroraReview from "./pages/IAuroraReview";
+import ReviewAnalysis from "./pages/ReviewAnalysis";
+import AnalysisReportDetail from "./pages/AnalysisReportDetail";
+import Documents from "./features/reviews/docXplorer/pages/Documents";
+import DocumentDetail from "./features/reviews/docXplorer/components/DocumentDetail";
+import DocCentral from "./pages/DocCentral";
+import Billing from "./pages/Billing";
+import Invoices from "./pages/Invoices";
+import NotFound from "./pages/NotFound";
+import Accounts from "./features/accounts/users/pages/Accounts";
+import Users from "./features/accounts/users/pages/Accounts";
+
+ 
+const queryClient = new QueryClient();
+ 
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          
+          <Route element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Outlet />
+              </AppLayout>
+            </ProtectedRoute>
+          }>
+            {/* Dashboard */}
+            <Route path="/dashboard" element={<Dashboard />} />
+ 
+            {/* Core Modules */}
+            <Route path="/clients" element={<Clients />} />
+            <Route path="/engagements" element={<Engagements />} />
+            <Route path="/projects" element={<Projects />} />
+ 
+            {/* Accounts - Single route handles both list and detail views */}
+            <Route path="/accounts">
+              <Route path="users" element={<Users />} />
+            </Route>
+
+            {/* <Route path="/accounts" element={<Accounts />}>
+              <Route path="users" element={<AddUserDialog />} />
+              <Route path="user-info" element={<RoleStats />} />
+            </Route> */}
+ 
+            {/* Back-compat redirects */}
+            <Route path="/command-centre" element={<Navigate to="/accounts/users" replace />} />
+            <Route path="/admin-console" element={<Navigate to="/accounts/users" replace />} />
+ 
+            {/* Case Time */}
+            <Route path="/case-time" element={<Outlet />}>
+              <Route index element={<Navigate to="timelog" replace />} />
+              <Route path="timelog" element={<TimelogEnhanced />} />
+              <Route path="tickets" element={<Tickets />} />
+            </Route>
+ 
+            {/* Review */}
+            <Route path="/iaurora-review" element={<IAuroraReview />} />
+            <Route path="/review" element={<Outlet />}>
+              <Route path="analysis" element={<ReviewAnalysis />}>
+                <Route path=":arid" element={<AnalysisReportDetail />} />
+              </Route>
+            </Route>
+ 
+            {/* Documents */}
+            {/* <Route path="/documents" element={<Outlet />}>
+              <Route index element={<Documents />} />
+              <Route path=":id" element={<DocumentDetail />} />
+            </Route> */}
+
+            <Route path="/documents" element={<Documents />}>
+              <Route path=":id" element={<DocumentDetail />} />
+            </Route>
+
+            {/* <Route path="/documents" element={<Documents />}>
+              <Route path=":id" element={<DocumentDetail />} />
+            </Route> */}
+ 
+            {/* Other routes */}
+            <Route path="/doc-central" element={<DocCentral />} />
+            <Route path="/billing" element={<Billing />} />
+            <Route path="/invoices" element={<Invoices />} />
+          </Route>
+ 
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
+ 
+export default App;
+ 
+
+
+for now, just give the divide into components and pages and just run them. Thats it. Models and further improvemenst, we will do later. Thanks a lot.
+
+
