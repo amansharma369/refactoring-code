@@ -2,15 +2,17 @@ I have a docXplorer page in my React (or Next.js) application. I’m refactoring
 
 The new folder structure for each feature (like reviews, accounts, etc.) should be as follows:
 
-features/
-  ai-analysis/
-    pages/
-    components/
-    models/
-    services/
-    hooks/
-    utils/
-    test/
+src/
+└── features/
+    └── review/
+       └── ai-analysis/
+           └── pages/
+           └──components/
+           └──models/
+           └──services/
+           └──hooks/
+           └──utils/
+           └──test/
 
 
 Currently, all my code is scattered and not well organized.
