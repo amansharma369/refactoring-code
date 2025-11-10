@@ -461,9 +461,11 @@ instead of using hardcode data, we will get the data from the external api in th
 
 and we need to just show the if the data that is not given by the api just hard code the data,
 i want you to refactor the code on the keeping mind saperation of concern and write in react, vite and typesript and i want you to keep this in mind that
-this api returns the data in real time so do it properly 
-using 
-components
-hooks
-type
-services
+this api returns the data in real time so do it properly and show the data in of real time in the directory and dashboard as well
+           └── pages/
+           └──components/
+           └──models/
+           └──services/
+           └──hooks/
+           └──utils/
+           └──test/
