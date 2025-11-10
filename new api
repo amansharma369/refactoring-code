@@ -1,0 +1,446 @@
+the below given is api response from backend and we need to show the name,email, role, status for the userDirectory.tsx
+so now i want to write my code for the new api response for the make sure to use axios are used for the frontend code using react, vite and typescript, 
+and we need to just show the data name,email, role, status in the userDiresctory.tsx
+[
+  {
+    "isActive": true,
+    "id": "02a01b92-16c2-4b40-9747-c9b9b33ee510",
+    "userName": "Dorian",
+    "normalizedUserName": "DORIAN",
+    "email": "Dorian@gmail.com",
+    "normalizedEmail": "DORIAN@GMAIL.COM",
+    "emailConfirmed": false,
+    "passwordHash": "AQAAAAIAAYagAAAAEBFElEZmNmA8b8rG0yWCWExcWaHJj0TdqBiqSOKcNBzXyY5BLKIbrmt2wL9oS4fwTg==",
+    "securityStamp": "DQIVTBG5CHSUOGQRC4ILMEF4452RX7WJ",
+    "concurrencyStamp": "ec89bbc4-da64-4fbb-88be-80715c66c610",
+    "phoneNumber": null,
+    "phoneNumberConfirmed": false,
+    "twoFactorEnabled": false,
+    "lockoutEnd": null,
+    "lockoutEnabled": true,
+    "accessFailedCount": 0
+  },
+  {
+    "isActive": true,
+    "id": "1226a5d6-61d2-4ef3-ba7c-00eaf16db5cc",
+    "userName": "APJ",
+    "normalizedUserName": "APJ",
+    "email": "APJ@gmail.com",
+    "normalizedEmail": "APJ@GMAIL.COM",
+    "emailConfirmed": false,
+    "passwordHash": "AQAAAAIAAYagAAAAEMxJmR2JddkAXW2mIOfbcn4zkQqUZWDjPvG8oabGvtFYSED928FjVygUJbEP6+1DPA==",
+    "securityStamp": "SBLPYYW3BGFVPE3WHXIUK4GN6SBHS3ZM",
+    "concurrencyStamp": "b9de6307-2f90-4645-ad15-98449d5443ce",
+    "phoneNumber": null,
+    "phoneNumberConfirmed": false,
+    "twoFactorEnabled": false,
+    "lockoutEnd": null,
+    "lockoutEnabled": true,
+    "accessFailedCount": 0
+  },
+  {
+    "isActive": true,
+    "id": "44b455aa-8640-4c4f-bfcf-d6e015bb7282",
+    "userName": "Richie",
+    "normalizedUserName": "RICHIE",
+    "email": "Richie@gmail.com",
+    "normalizedEmail": "RICHIE@GMAIL.COM",
+    "emailConfirmed": false,
+    "passwordHash": "AQAAAAIAAYagAAAAEDv3WbSP4SoKrRIkaZNc1JiikgXqONgZkvDNPHf+ElWa51kr773tuyR+fAFSNvEkkg==",
+    "securityStamp": "UAEF3WSYPS73B6UNJTYLWGZN7A37EYYG",
+    "concurrencyStamp": "d3bf40a8-1462-41f6-96cb-500b1e44084f",
+    "phoneNumber": null,
+    "phoneNumberConfirmed": false,
+    "twoFactorEnabled": false,
+    "lockoutEnd": null,
+    "lockoutEnabled": true,
+    "accessFailedCount": 0
+  },
+  {
+    "isActive": true,
+    "id": "4a636059-a778-43b0-bbc2-2c0405fbc7d7",
+    "userName": "AlexHormozi",
+    "normalizedUserName": "ALEXHORMOZI",
+    "email": "Alex@gmail.com",
+    "normalizedEmail": "ALEX@GMAIL.COM",
+    "emailConfirmed": false,
+    "passwordHash": "AQAAAAIAAYagAAAAEB9tH82Vy1OQnuR8H1qUNnQZ4twjtNgg2X1prFeDxxb9r1ktsa6iFnfJJjd3l3DEaA==",
+    "securityStamp": "WPWGYV5VKISRCPNMJU7AO2IZ5KAY7UYS",
+    "concurrencyStamp": "2b1993be-20d9-45d5-8fcd-34220e4ea639",
+    "phoneNumber": null,
+    "phoneNumberConfirmed": false,
+    "twoFactorEnabled": false,
+    "lockoutEnd": null,
+    "lockoutEnabled": true,
+    "accessFailedCount": 0
+  },
+  {
+    "isActive": true,
+    "id": "6572cd01-d87e-4249-b5c0-b7aeb7965716",
+    "userName": "hari",
+    "normalizedUserName": "HARI",
+    "email": "hari@gmail.com",
+    "normalizedEmail": "HARI@GMAIL.COM",
+    "emailConfirmed": false,
+    "passwordHash": "AQAAAAIAAYagAAAAEJ9XE+JUfMY6qxPH4aKFmYoCVEvk1SgMxJF7vo0CNKufcUjZK6omxT4LtihqwAhcmQ==",
+    "securityStamp": "YZIHSEEAYKKSGJV2NU55JOK2GNINGS3U",
+    "concurrencyStamp": "4eabd6d1-c4d2-43f2-a90b-7cb6092f9107",
+    "phoneNumber": null,
+    "phoneNumberConfirmed": false,
+    "twoFactorEnabled": false,
+    "lockoutEnd": null,
+    "lockoutEnabled": true,
+    "accessFailedCount": 0
+  },
+  {
+    "isActive": true,
+    "id": "78c44069-bedb-4404-8de5-66c67a8d0fb3",
+    "userName": "arun",
+    "normalizedUserName": "ARUN",
+    "email": "arun@gmail.com",
+    "normalizedEmail": "ARUN@GMAIL.COM",
+    "emailConfirmed": false,
+    "passwordHash": "AQAAAAIAAYagAAAAECyJZP3iY3Gbuv1SYwnhUoE/L0Kznvreq0/zmMJD2STyLiyl3B6fpikalEmaDXr/vw==",
+    "securityStamp": "7LHCVOG5DJTDPI34QEIK53UNDCLP3HZJ",
+    "concurrencyStamp": "9ed80597-affa-4638-bdca-ec5b1fec49d4",
+    "phoneNumber": null,
+    "phoneNumberConfirmed": false,
+    "twoFactorEnabled": false,
+    "lockoutEnd": null,
+    "lockoutEnabled": true,
+    "accessFailedCount": 0
+  },
+  {
+    "isActive": true,
+    "id": "de000920-2d82-4bab-9ea1-df953e280769",
+    "userName": "Aman",
+    "normalizedUserName": "AMAN",
+    "email": "aman@gmail.com",
+    "normalizedEmail": "AMAN@GMAIL.COM",
+    "emailConfirmed": false,
+    "passwordHash": "AQAAAAIAAYagAAAAENKjq3KTXzVGtUfD8eLUcwvH7awEfR6aYkSYyaNzaLdkUJmmQarn4K5FblU+Gz193w==",
+    "securityStamp": "ZNZB6FOP6GMQCB3EXUDTQL77QVM35H6B",
+    "concurrencyStamp": "d9e726aa-b41b-4bb9-9f35-d6791b9b3b5a",
+    "phoneNumber": null,
+    "phoneNumberConfirmed": false,
+    "twoFactorEnabled": false,
+    "lockoutEnd": null,
+    "lockoutEnabled": true,
+    "accessFailedCount": 0
+  }
+]
+
+
+
+// services/api/userApi.ts
+export type Role =
+  | "Domain Admin"
+  | "Project Admin"
+  | "Review Manager"
+  | "Reviewer"
+  | "User";
+
+export type Status = "Active" | "Inactive";
+
+export type User = {
+  name: string;
+  email: string;
+  role: Role;
+  status: Status;
+};
+
+export type UserListResponse = {
+  users: User[];
+  totalCount: number;
+};
+
+// Base API URL - adjust according to your environment
+const API_BASE_URL = "https://localhost:7280";
+
+/**
+ * Fetches all users from the backend API
+ */
+export async function getAllUsers(): Promise<UserListResponse> {
+  try {
+    const token = localStorage.getItem("accessToken"); // Adjust based on your auth implementation
+    
+    const response = await fetch(`${API_BASE_URL}/api/User/users`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+    });
+
+    console.log("Fetch response:", response);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch users: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
+}
+
+
+// features/accounts/users/components/UsersDirectory.tsx
+import { useMemo, useState } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Edit3, Eye } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useNavigate } from "react-router-dom";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+
+type Role =
+  | "Domain Admin"
+  | "Project Admin"
+  | "Review Manager"
+  | "Reviewer"
+  | "User";
+type Status = "Active" | "Inactive";
+
+type User = {
+  name: string;
+  email: string;
+  role: Role;
+  status: Status;
+};
+
+// Dummy directory
+const DIRECTORY: User[] = [
+  {
+    name: "Alice Johnson",
+    email: "alice.johnson@aurora.com",
+    role: "Domain Admin",
+    status: "Active",
+  },
+  {
+    name: "Brian Lee",
+    email: "brian.lee@aurora.com",
+    role: "Project Admin",
+    status: "Active",
+  },
+  {
+    name: "Catherine Smith",
+    email: "catherine.smith@aurora.com",
+    role: "Reviewer",
+    status: "Inactive",
+  },
+  {
+    name: "Daniel Roberts",
+    email: "daniel.roberts@aurora.com",
+    role: "User",
+    status: "Active",
+  },
+  {
+    name: "Emily Clark",
+    email: "emily.clark@aurora.com",
+    role: "Review Manager",
+    status: "Active",
+  },
+];
+
+type UsersDirectoryProps = {
+  onEditUser: (user: User) => void;
+};
+
+export function UsersDirectory({ onEditUser }: UsersDirectoryProps) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const suggestions = useMemo(
+    () =>
+      DIRECTORY.filter(
+        (u) =>
+          u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.status.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [searchQuery]
+  );
+
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    paginatedData: paginatedUsers,
+    setCurrentPage,
+    setPageSize,
+  } = usePagination({ data: suggestions, initialPageSize: 10 });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Users</CardTitle>
+        <CardDescription>Manage user access and permissions</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, email, role, or status..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedUsers.map((u) => (
+              <TableRow key={u.email}>
+                <TableCell className="font-medium">{u.name}</TableCell>
+                <TableCell>{u.email}</TableCell>
+                <TableCell>{u.role}</TableCell>
+                <TableCell>
+                  <span
+                    className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+                      u.status === "Active"
+                        ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                        : "bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300"
+                    }`}
+                  >
+                    {u.status}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEditUser(u)}
+                    >
+                      <Edit3 className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        navigate(
+                          `/accounts/users?email=${encodeURIComponent(
+                            u.email
+                          )}`
+                        )
+                      }
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      View
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={suggestions.length}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={setPageSize}
+        />
+
+        {suggestions.length === 0 && searchQuery && (
+          <p className="text-sm text-muted-foreground text-center py-6">
+            No users found.
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export type { User };
+
+
+// features/accounts/users/pages/Users.tsx
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Dashboard } from "../components/Dashboard";
+import { UsersDirectory } from "../components/UsersDirectory";
+import { AddUserDialog } from "../components/AddUserDialog";
+import { EditUserDialog } from "../components/EditUserDialog";
+import { UserInfo } from "../components/UserInfo";
+import type { User } from "../components/UsersDirectory";
+
+export default function Users() {
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get("email");
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setEditOpen(true);
+  };
+
+  // If email param exists, show user info view
+  if (email) {
+    return <UserInfo />;
+  }
+
+  // Otherwise show accounts list view
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage user access and permissions
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <AddUserDialog />
+        </div>
+      </div>
+
+      {/* Dashboard - Role Stats */}
+      <Dashboard />
+
+      {/* Users Directory */}
+      <UsersDirectory onEditUser={handleEditUser} />
+
+      {/* Edit User Dialog */}
+      <EditUserDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        user={selectedUser}
+      />
+    </div>
+  );
+}
