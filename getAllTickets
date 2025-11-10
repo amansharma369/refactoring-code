@@ -1,0 +1,469 @@
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+import { useState, useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Ticket } from "@/types/ticket";
+import { format } from "date-fns";
+import { Combobox } from "@/components/ui/combobox";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+
+interface TicketsDirectoryProps {
+  tickets: Ticket[];
+}
+
+export const TicketsDirectory = ({ tickets }: TicketsDirectoryProps) => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | Ticket["status"]>("all");
+  const [projectFilter, setProjectFilter] = useState("");
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+
+  const projectOptions = useMemo(() => {
+    const uniqueProjects = Array.from(new Set(tickets.map(t => t.project).filter(Boolean)));
+    return uniqueProjects.map(project => ({
+      value: project,
+      label: project,
+    }));
+  }, [tickets]);
+
+  const filteredTickets = useMemo(() => {
+    const q = searchTerm.toLowerCase();
+    return tickets.filter((t) => {
+      const matchesSearch =
+        t.id.toLowerCase().includes(q) ||
+        t.title.toLowerCase().includes(q) ||
+        t.users.some((u) => u.toLowerCase().includes(q));
+      const matchesStatus = statusFilter === "all" || t.status === statusFilter;
+      const matchesProject = !projectFilter || t.project === projectFilter;
+      return matchesSearch && matchesStatus && matchesProject;
+    });
+  }, [tickets, searchTerm, statusFilter, projectFilter]);
+
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    paginatedData: paginatedTickets,
+    setCurrentPage,
+    setPageSize,
+  } = usePagination({ data: filteredTickets, initialPageSize: 10 });
+
+  const statusBadgeVariant = (s: Ticket["status"]) =>
+    s === "Open" ? "outline" : s === "In Progress" ? "default" : "secondary";
+
+  const handleView = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setViewDialogOpen(true);
+  };
+
+  const handleEdit = () => {
+    console.log("Edit ticket:", selectedTicket);
+  };
+
+  const handleDelete = () => {
+    console.log("Delete ticket:", selectedTicket);
+    setViewDialogOpen(false);
+  };
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Ticket Directory</CardTitle>
+          <CardDescription>
+            Overview of all project tickets
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tickets by ID, title, or user..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="Open">Open</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="w-full sm:w-[220px]">
+              <Combobox
+                options={projectOptions}
+                value={projectFilter}
+                onValueChange={setProjectFilter}
+                placeholder="Filter by Project"
+                searchPlaceholder="Search projects..."
+                emptyText="No projects found."
+              />
+            </div>
+          </div>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>ID</TableHead>
+                <TableHead>Title</TableHead>
+                <TableHead>Assigned Date</TableHead>
+                <TableHead>Closed Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Total Hours</TableHead>
+                <TableHead className="text-center">Users</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedTickets.map((t) => (
+                <TableRow 
+                  key={t.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleView(t)}
+                >
+                  <TableCell className="font-medium">{t.id}</TableCell>
+                  <TableCell>{t.title}</TableCell>
+                  <TableCell>{format(t.assignedDate, "MMM dd, yyyy")}</TableCell>
+                  <TableCell>{t.closedDate ? format(t.closedDate, "MMM dd, yyyy") : "-"}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusBadgeVariant(t.status) as any}>{t.status}</Badge>
+                  </TableCell>
+                  <TableCell className="text-right">{t.totalHours}h</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant="secondary">{t.users.length}</Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={filteredTickets.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
+        </CardContent>
+      </Card>
+
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>Ticket Details</DialogTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleEdit}>
+                  Edit
+                </Button>
+                <Button variant="outline" size="sm">
+                  Update
+                </Button>
+                <Button variant="destructive" size="sm" onClick={handleDelete}>
+                  Delete
+                </Button>
+              </div>
+            </div>
+            <DialogDescription>
+              View and manage ticket information
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTicket && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Ticket ID</label>
+                  <p className="text-sm font-semibold">{selectedTicket.id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <div className="mt-1">
+                    <Badge variant={statusBadgeVariant(selectedTicket.status) as any}>
+                      {selectedTicket.status}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Assigned Date</label>
+                  <p className="text-sm">{format(selectedTicket.assignedDate, "MMM dd, yyyy")}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Closed Date</label>
+                  <p className="text-sm">
+                    {selectedTicket.closedDate ? format(selectedTicket.closedDate, "MMM dd, yyyy") : "Not closed"}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Total Hours</label>
+                  <p className="text-sm">{selectedTicket.totalHours}h</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Project</label>
+                  <p className="text-sm">{selectedTicket.project || "-"}</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Title</label>
+                <p className="text-sm">{selectedTicket.title}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Description</label>
+                <p className="text-sm">{selectedTicket.description || "No description"}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Assigned Users</label>
+                <p className="text-sm">{selectedTicket.users.join(", ") || "No users assigned"}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Tasks</label>
+                <p className="text-sm">{selectedTicket.tasks.join(", ")}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+import { TicketsDashboard } from "../components/TicketsDashboard";
+import { TicketsDirectory } from "../components/TicketsDirectory";
+import { Ticket } from "@/types/ticket";
+
+// Mock data
+const mockTickets: Ticket[] = [
+  {
+    id: "TKT-001",
+    title: "Fix login authentication bug",
+    assignedDate: new Date("2024-01-15"),
+    closedDate: new Date("2024-01-20"),
+    status: "Closed",
+    totalHours: 8.5,
+    users: ["John Doe", "Jane Smith"],
+    tasks: ["Bug Fix", "Testing"],
+    description: "Users unable to login with valid credentials",
+    project: "iAurora Web Revamp",
+  },
+  {
+    id: "TKT-002",
+    title: "Implement dashboard analytics",
+    assignedDate: new Date("2024-01-18"),
+    closedDate: null,
+    status: "In Progress",
+    totalHours: 12.0,
+    users: ["Alice Johnson"],
+    tasks: ["Development", "UI Design"],
+    description: "Add analytics widgets to main dashboard",
+    project: "Claims ETL Migration",
+  },
+  {
+    id: "TKT-003",
+    title: "Database migration script",
+    assignedDate: new Date("2024-01-22"),
+    closedDate: null,
+    status: "Open",
+    totalHours: 0,
+    users: [],
+    tasks: ["Database", "Migration"],
+    description: "Create scripts for migrating legacy data",
+    project: "Fraud Analytics PoC",
+  },
+  {
+    id: "TKT-004",
+    title: "Performance optimization",
+    assignedDate: new Date("2024-01-10"),
+    closedDate: new Date("2024-01-25"),
+    status: "Closed",
+    totalHours: 16.5,
+    users: ["Bob Wilson", "Carol Davis"],
+    tasks: ["Optimization", "Testing"],
+    description: "Improve API response times",
+    project: "Retail App QA Suite",
+  },
+  {
+    id: "TKT-005",
+    title: "Security vulnerability patch",
+    assignedDate: new Date("2024-01-28"),
+    closedDate: null,
+    status: "In Progress",
+    totalHours: 6.0,
+    users: ["David Lee"],
+    tasks: ["Security", "Bug Fix"],
+    description: "Address SQL injection vulnerability",
+    project: "MES Integration",
+  },
+  {
+    id: "TKT-006",
+    title: "Mobile app UI redesign",
+    assignedDate: new Date("2024-02-01"),
+    closedDate: null,
+    status: "Open",
+    totalHours: 0,
+    users: [],
+    tasks: ["UI Design", "Development"],
+    description: "Modernize mobile application interface",
+    project: "Data Lake Implementation",
+  },
+];
+
+export default function Tickets() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="text-sm text-muted-foreground">
+          Case Time / Tickets
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Tickets</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage and track project tickets
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <TicketsDashboard tickets={mockTickets} />
+
+      <TicketsDirectory tickets={mockTickets} />
+    </div>
+  );
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////TicketsDashboard
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Ticket as TicketIcon, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Ticket } from "../types/ticket";
+
+interface TicketsDashboardProps {
+  tickets: Ticket[];
+}
+
+export const TicketsDashboard = ({ tickets }: TicketsDashboardProps) => {
+  const totalTickets = tickets.length;
+  const openTickets = tickets.filter((t) => t.status === "Open").length;
+  const inProgressTickets = tickets.filter((t) => t.status === "In Progress").length;
+  const closedTickets = tickets.filter((t) => t.status === "Closed").length;
+
+  const stats = [
+    {
+      title: "Total Tickets",
+      value: totalTickets.toString(),
+      description: "All tickets",
+      icon: TicketIcon,
+      color: "text-primary",
+    },
+    {
+      title: "Open",
+      value: openTickets.toString(),
+      description: "Awaiting assignment",
+      icon: AlertCircle,
+      color: "text-destructive",
+    },
+    {
+      title: "In Progress",
+      value: inProgressTickets.toString(),
+      description: "Currently active",
+      icon: Clock,
+      color: "text-[hsl(var(--aurora-mid))]",
+    },
+    {
+      title: "Closed",
+      value: closedTickets.toString(),
+      description: "Completed tickets",
+      icon: CheckCircle2,
+      color: "text-accent",
+    },
+  ];
+
+  return (
+    <div className="grid gap-4 md:grid-cols-4">
+      {stats.map((stat) => {
+        const Icon = stat.icon;
+        return (
+          <Card key={stat.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+              <Icon className={`h-4 w-4 ${stat.color}`} />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className="text-xs text-muted-foreground">{stat.description}</p>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
+
+//////////////another file Ticket.ts
+export interface Ticket {
+  id: string;
+  title: string;
+  assignedDate: Date;
+  closedDate: Date | null;
+  status: "Open" | "In Progress" | "Closed";
+  totalHours: number;
+  users: string[];
+  tasks: string[];
+  description?: string;
+  project?: string;
+}
+
+
+
+instead of using hardcode data, we will get the data from the external api in this form 
+ "result": [
+    {
+      "comments": "Ticket created for Collection stage.",
+      "sys_mod_count": "0",
+      "project": {
+        "link": "https://dev353407.service-now.com/api/now/table/x_1840050_aecho_project/eedaf6f69389f210368ef21bdd03d6ed",
+        "value": "eedaf6f69389f210368ef21bdd03d6ed"
+      },
+      "sys_updated_on": "2025-11-10 12:45:37",
+      "sys_tags": "",
+      "number": "CSTM0000003",
+      "sys_id": "d85bf23a9389f210368ef21bdd03d6dd",
+      "sys_updated_by": "admin",
+      "stage": "Collection",
+      "sys_created_on": "2025-11-10 12:45:37",
+      "sys_created_by": "admin",
+      "assigned_to": "",
+      "status": "New"
+    }
+  ]
+}
+
+and we need to just show the if the data that is not given by the api just hard code the data,
+i want you to refactor the code on the keeping mind saperation of concern and write in react, vite and typesript and i want you to keep this in mind that
+this api returns the data in real time so do it properly 
+using 
+components
+hooks
+type
+services
