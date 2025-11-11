@@ -437,31 +437,161 @@ export interface Ticket {
 
 
 instead of using hardcode data, we will get the data from the external api in this form 
- "result": [
-    {
-      "comments": "Ticket created for Collection stage.",
-      "sys_mod_count": "0",
-      "project": {
-        "link": "https://dev353407.service-now.com/api/now/table/x_1840050_aecho_project/eedaf6f69389f210368ef21bdd03d6ed",
-        "value": "eedaf6f69389f210368ef21bdd03d6ed"
-      },
-      "sys_updated_on": "2025-11-10 12:45:37",
-      "sys_tags": "",
-      "number": "CSTM0000003",
-      "sys_id": "d85bf23a9389f210368ef21bdd03d6dd",
-      "sys_updated_by": "admin",
-      "stage": "Collection",
-      "sys_created_on": "2025-11-10 12:45:37",
-      "sys_created_by": "admin",
-      "assigned_to": "",
-      "status": "New"
-    }
-  ]
-}
-
+[
+  {
+    "ticketId": "CSTM0000011",
+    "projectCode": "H1003",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000007",
+    "projectCode": "H1010",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000015",
+    "projectCode": "H1009",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000004",
+    "projectCode": "H1013",
+    "status": "New",
+    "stage": "Processing",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Ticket created for Processing stage.",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000014",
+    "projectCode": "H1002",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000010",
+    "projectCode": "H1012",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000005",
+    "projectCode": "H1004",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000006",
+    "projectCode": "H1007",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000009",
+    "projectCode": "H1006",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000017",
+    "projectCode": "H1013",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000013",
+    "projectCode": "H1001",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000003",
+    "projectCode": "H1013",
+    "status": "closed",
+    "stage": "Collection",
+    "assignedTo": "Cherie Fuhri",
+    "assignedBy": "",
+    "comment": "Ticket created for Collection stage.",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000016",
+    "projectCode": "H1008",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000012",
+    "projectCode": "H1011",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  },
+  {
+    "ticketId": "CSTM0000008",
+    "projectCode": "H1005",
+    "status": "New",
+    "stage": "Collection",
+    "assignedTo": "",
+    "assignedBy": "",
+    "comment": "Initial ticket created for existing proj",
+    "title": null
+  }
+]
 and we need to just show the if the data that is not given by the api just hard code the data,
 i want you to refactor the code on the keeping mind saperation of concern and write in react, vite and typesript and i want you to keep this in mind that
-this api returns the data in real time so do it properly and show the data in of real time in the directory and dashboard as well
+this api returns the data in real time so do it properly and show the data in of real time in the directory and dashboard as well use axios also 
            └── pages/
            └──components/
            └──models/
