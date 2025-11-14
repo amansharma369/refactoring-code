@@ -1,0 +1,863 @@
+// components/TicketsDirectory.tsx
+import { useState, useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Search, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Ticket } from "../types/Ticket";
+import { format } from "date-fns";
+import { Combobox } from "@/components/ui/combobox";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useToast } from "@/hooks/use-toast";
+
+interface TicketsDirectoryProps {
+  tickets: Ticket[];
+  loading?: boolean;
+  onUpdate?: (ticketId: string, data: any) => Promise<void>;
+  onDelete?: (ticketId: string) => Promise<void>;
+}
+
+export const TicketsDirectory = ({ 
+  tickets, 
+  loading = false,
+  onUpdate,
+  onDelete 
+}: TicketsDirectoryProps) => {
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | Ticket["status"]>("all");
+  const [projectFilter, setProjectFilter] = useState("");
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+
+  const projectOptions = useMemo(() => {
+    const uniqueProjects = Array.from(
+      new Set(tickets.map(t => t.projectCode).filter(Boolean))
+    );
+    return uniqueProjects.map(project => ({
+      value: project!,
+      label: project!,
+    }));
+  }, [tickets]);
+
+  const filteredTickets = useMemo(() => {
+    const q = searchTerm.toLowerCase();
+    return tickets.filter((t) => {
+      const matchesSearch =
+        t.id.toLowerCase().includes(q) ||
+        (t.title?.toLowerCase().includes(q) || false) ||
+        t.users.some((u) => u.toLowerCase().includes(q));
+      const matchesStatus = statusFilter === "all" || t.status === statusFilter;
+      const matchesProject = !projectFilter || t.projectCode === projectFilter;
+      return matchesSearch && matchesStatus && matchesProject;
+    });
+  }, [tickets, searchTerm, statusFilter, projectFilter]);
+
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    paginatedData: paginatedTickets,
+    setCurrentPage,
+    setPageSize,
+  } = usePagination({ data: filteredTickets, initialPageSize: 10 });
+
+  const statusBadgeVariant = (s: Ticket["status"]) => {
+    const variants: Record<Ticket["status"], string> = {
+      "Open": "outline",
+      "New": "default",
+      "In Progress": "default",
+      "Closed": "secondary",
+    };
+    return variants[s] || "outline";
+  };
+
+  const handleView = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setViewDialogOpen(true);
+  };
+
+  const handleEdit = () => {
+    toast({
+      title: "Edit functionality",
+      description: "Implement edit form here",
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!selectedTicket || !onUpdate) return;
+    
+    try {
+      setActionLoading(true);
+      await onUpdate(selectedTicket.id, {});
+      toast({
+        title: "Success",
+        description: "Ticket updated successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update ticket",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedTicket || !onDelete) return;
+    
+    try {
+      setActionLoading(true);
+      await onDelete(selectedTicket.id);
+      setViewDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Ticket deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete ticket",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  if (loading && tickets.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Ticket Directory</CardTitle>
+          <CardDescription>Loading tickets...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex justify-center items-center py-10">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Ticket Directory</CardTitle>
+          <CardDescription>
+            Overview of all project tickets
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search tickets by ID, title, or user..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filter by Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="New">New</SelectItem>
+                <SelectItem value="Open">Open</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="w-full sm:w-[220px]">
+              <Combobox
+                options={projectOptions}
+                value={projectFilter}
+                onValueChange={setProjectFilter}
+                placeholder="Filter by Project"
+                searchPlaceholder="Search projects..."
+                emptyText="No projects found."
+              />
+            </div>
+          </div>
+
+          {filteredTickets.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              No tickets found
+            </div>
+          ) : (
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ticket ID</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Project Code</TableHead>
+                    <TableHead>Stage</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Assigned To</TableHead>
+                    <TableHead className="text-center">Users Count</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedTickets.map((t) => (
+                    <TableRow 
+                      key={t.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleView(t)}
+                    >
+                      <TableCell className="font-medium">{t.id}</TableCell>
+                      <TableCell>{t.title || "No title"}</TableCell>
+                      <TableCell>{t.projectCode || "-"}</TableCell>
+                      <TableCell>{t.stage || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant={statusBadgeVariant(t.status) as any}>{t.status}</Badge>
+                      </TableCell>
+                      <TableCell>{t.users[0] || "Unassigned"}</TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="secondary">{t.users.length}</Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={filteredTickets.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+              />
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center justify-between">
+              <DialogTitle>Ticket Details</DialogTitle>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleEdit}
+                  disabled={actionLoading}
+                >
+                  Edit
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleUpdate}
+                  disabled={actionLoading || !onUpdate}
+                >
+                  {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update"}
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleDelete}
+                  disabled={actionLoading || !onDelete}
+                >
+                  {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Delete"}
+                </Button>
+              </div>
+            </div>
+            <DialogDescription>
+              View and manage ticket information
+            </DialogDescription>
+          </DialogHeader>
+          {selectedTicket && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Ticket ID</label>
+                  <p className="text-sm font-semibold">{selectedTicket.id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <div className="mt-1">
+                    <Badge variant={statusBadgeVariant(selectedTicket.status) as any}>
+                      {selectedTicket.status}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Project Code</label>
+                  <p className="text-sm">{selectedTicket.projectCode || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Stage</label>
+                  <p className="text-sm">{selectedTicket.stage || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Assigned By</label>
+                  <p className="text-sm">{selectedTicket.assignedBy || "N/A"}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Total Hours</label>
+                  <p className="text-sm">{selectedTicket.totalHours}h</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Title</label>
+                <p className="text-sm">{selectedTicket.title || "No title"}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Description</label>
+                <p className="text-sm">{selectedTicket.description || "No description"}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Assigned Users</label>
+                <p className="text-sm">{selectedTicket.users.join(", ") || "No users assigned"}</p>
+              </div>
+              {selectedTicket.tasks.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Tasks</label>
+                  <p className="text-sm">{selectedTicket.tasks.join(", ")}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+// hooks/useTickets.ts
+import { useState, useEffect, useCallback } from 'react';
+import { Ticket } from '../types/Ticket';
+import { ticketService } from '../services/api/TicketService';
+
+interface UseTicketsReturn {
+  tickets: Ticket[];
+  loading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+  updateTicket: (ticketId: string, data: any) => Promise<void>;
+  deleteTicket: (ticketId: string) => Promise<void>;
+}
+
+export const useTickets = (): UseTicketsReturn => {
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchTickets = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await ticketService.getTickets();
+      setTickets(data);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch tickets'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const updateTicket = useCallback(async (ticketId: string, data: any) => {
+    try {
+      const updatedTicket = await ticketService.updateTicket(ticketId, data);
+      setTickets(prev => prev.map(t => t.id === ticketId ? updatedTicket : t));
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to update ticket');
+    }
+  }, []);
+
+  const deleteTicket = useCallback(async (ticketId: string) => {
+    try {
+      await ticketService.deleteTicket(ticketId);
+      setTickets(prev => prev.filter(t => t.id !== ticketId));
+    } catch (err) {
+      throw err instanceof Error ? err : new Error('Failed to delete ticket');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
+
+  return {
+    tickets,
+    loading,
+    error,
+    refetch: fetchTickets,
+    updateTicket,
+    deleteTicket,
+  };
+};
+
+// pages/Tickets.tsx
+
+// ✅ 1. Import useAuth and Loader2
+import { useAuth } from "@/features/main/context/AuthContext"; // Assuming path from other files
+import { Loader2 } from "lucide-react";
+
+// ✅ 2. Update import paths (assuming a similar structure to TimeLog feature)
+import { TicketsDashboard } from "../components/TicketsDashboard";
+import { TicketsDirectory } from "../components/TicketsDirectory";
+import { useTickets } from "../hooks/UseTickets";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export default function Tickets() {
+  // ✅ 3. Get user from auth hook
+  const { user } = useAuth();
+
+
+
+  // ✅ 4. Pass autoFetch option to useTickets.
+  //    It will only fetch when `user` is available.
+  const { tickets, loading, error, refetch, updateTicket, deleteTicket } =
+    useTickets();
+    // useTickets({
+    //   autoFetch: !!user,
+    // });
+
+  // ✅ 5. Add loading state while waiting for authentication
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-2 text-muted-foreground">
+          Authenticating user...
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <div className="text-sm text-muted-foreground">
+          Case Time / Tickets
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Tickets</h1>
+            <p className="text-muted-foreground mt-1">
+              Manage and track project tickets
+            </p>
+          </div>
+          <Button 
+            onClick={refetch} 
+            disabled={loading}
+            variant="outline"
+            size="sm"
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+        </Alert>
+      )}
+
+      <TicketsDashboard tickets={tickets} loading={loading} />
+
+      <TicketsDirectory 
+        tickets={tickets} 
+        loading={loading}
+        onUpdate={updateTicket}
+        onDelete={deleteTicket}
+      />
+    </div>
+  );
+}
+
+// services/api/axiosconfig.ts
+import axios from 'axios';
+
+const axiosInstance = axios.create({
+  baseURL: 'https://localhost:7255/api',
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    // Add auth token if available
+    // ✅ FIX: Read 'accessToken' which matches what AuthContext saves
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle common errors
+    if (error.response?.status === 401) {
+      // Handle unauthorized
+      console.error('Unauthorized access');
+      // Redirect to login or refresh token
+    } else if (error.response?.status === 500) {
+      console.error('Server error');
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default axiosInstance;
+
+// services/ticketService.ts
+import axiosInstance from './AxiosConfig';
+import { ApiTicketResponse, Ticket } from '../../types/Ticket';
+
+export const ticketService = {
+  // Fetch all tickets
+  getTickets: async (): Promise<Ticket[]> => {
+    try {
+      // const response = await axiosInstance.get<ApiTicketResponse[]>('/Ticket');
+      const response = await axiosInstance.get<ApiTicketResponse[]>('/Ticket/GetAllTicketsOfUser');
+      
+      return transformTickets(response.data);
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      throw error;
+    }
+  },
+
+  getTicketsForUser: async (): Promise<Ticket[]> => {
+    try {
+      const response = await axiosInstance.get<ApiTicketResponse[]>('/Ticket');
+      return transformTickets(response.data);
+    } catch (error) {
+      console.error('Error fetching tickets:', error);
+      throw error;
+    }
+  },
+
+  // Fetch single ticket by ID
+  getTicketById: async (ticketId: string): Promise<Ticket> => {
+    try {
+      const response = await axiosInstance.get<ApiTicketResponse>(`/tickets/${ticketId}`);
+      return transformTicket(response.data);
+    } catch (error) {
+      console.error(`Error fetching ticket ${ticketId}:`, error);
+      throw error;
+    }
+  },
+
+  // Update ticket
+  updateTicket: async (ticketId: string, data: Partial<ApiTicketResponse>): Promise<Ticket> => {
+    try {
+      const response = await axiosInstance.put<ApiTicketResponse>(`/tickets/${ticketId}`, data);
+      return transformTicket(response.data);
+    } catch (error) {
+      console.error(`Error updating ticket ${ticketId}:`, error);
+      throw error;
+    }
+  },
+
+  // Delete ticket
+  deleteTicket: async (ticketId: string): Promise<void> => {
+    try {
+      await axiosInstance.delete(`/tickets/${ticketId}`);
+    } catch (error) {
+      console.error(`Error deleting ticket ${ticketId}:`, error);
+      throw error;
+    }
+  },
+};
+
+// Transform API response to internal Ticket format
+const transformTicket = (apiTicket: ApiTicketResponse): Ticket => {
+  return {
+    id: apiTicket.ticketId,
+    title: apiTicket.title,
+    assignedDate: null, // API doesn't provide this
+    closedDate: null, // API doesn't provide this
+    status: mapStatus(apiTicket.status),
+    totalHours: 0, // API doesn't provide this
+    users: apiTicket.assignedTo ? [apiTicket.assignedTo] : [],
+    tasks: [], // API doesn't provide this
+    description: apiTicket.comment || undefined,
+    project: undefined, // API doesn't provide project name
+    projectCode: apiTicket.projectCode,
+    stage: apiTicket.stage,
+    assignedBy: apiTicket.assignedBy || undefined,
+  };
+};
+
+const transformTickets = (apiTickets: ApiTicketResponse[]): Ticket[] => {
+  return apiTickets.map(transformTicket);
+};
+
+// Map API status to internal status
+const mapStatus = (apiStatus: string): "Open" | "In Progress" | "Closed" | "New" => {
+  const statusMap: Record<string, "Open" | "In Progress" | "Closed" | "New"> = {
+    'New': 'New',
+    'Open': 'Open',
+    'In Progress': 'In Progress',
+    'InProgress': 'In Progress',
+    'Closed': 'Closed',
+    'Completed': 'Closed',
+  };
+  
+  return statusMap[apiStatus] || 'Open';
+};
+
+// types/ticket.ts
+export interface ApiTicketResponse {
+  ticketId: string;
+  projectCode: string;
+  status: string;
+  stage: string;
+  assignedTo: string;
+  assignedBy: string;
+  comment: string;
+  title: string | null;
+  email: string;
+}
+
+export interface Ticket {
+  id: string;
+  title: string | null;
+  assignedDate: Date | null;
+  closedDate: Date | null;
+  status: "Open" | "In Progress" | "Closed" | "New";
+  totalHours: number;
+  users: string[];
+  tasks: string[];
+  description?: string;
+  project?: string;
+  projectCode?: string;
+  stage?: string;
+  assignedBy?: string;
+}
+
+export interface TicketsResponse {
+  data: ApiTicketResponse[];
+  total?: number;
+  page?: number;
+  pageSize?: number;
+}
+
+// AuthContext.ts
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
+import { useAxiosInterceptor } from "@/lib/axiosSetup";
+import axios from "axios";
+
+interface DecodedToken {
+    email: string;
+    role: string;
+    permissions?: string[];
+    menus?: string[];
+    exp: number;
+}
+
+interface AuthContextType {
+    accessToken: string | null;
+    refreshToken: string | null;
+    user: DecodedToken | null;
+    setAuth: (authData: {
+        accessToken: string;
+        refreshToken: string;
+        user: DecodedToken;
+    }) => void;
+    logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+    children,
+}) => {
+
+
+
+    const [accessToken, setAccessToken] = useState<string | null>(() =>
+        localStorage.getItem("accessToken")
+    );
+    const [refreshToken, setRefreshToken] = useState<string | null>(() =>
+        localStorage.getItem("refreshToken")
+    );
+    const [user, setUser] = useState<DecodedToken | null>(null);
+
+
+    // Decode token whenever it changes
+    useEffect(() => {
+        if (accessToken) {
+            try {
+                const decoded: any = jwtDecode(accessToken);
+
+                const parsedMenus =
+                    typeof decoded.menus === "string"
+                        ? JSON.parse(decoded.menus)
+                        : decoded.menus || [];
+
+                const parsedPermissions =
+                    typeof decoded.permissions === "string"
+                        ? JSON.parse(decoded.permissions)
+                        : decoded.permissions || [];
+
+                setUser({
+                    email: decoded.email,
+                    role: decoded.role,
+                    permissions: parsedPermissions,
+                    menus: parsedMenus,
+                    exp: decoded.exp,
+                });
+            } catch (err) {
+                console.error("Invalid JWT token:", err);
+                setUser(null);
+            }
+        } else {
+            setUser(null);
+        }
+    }, [accessToken]);
+
+
+    const setAuth = (authData: {
+        accessToken: string;
+        refreshToken: string;
+        user: DecodedToken;
+    }) => {
+        setAccessToken(authData.accessToken);
+        setRefreshToken(authData.refreshToken);
+        setUser(authData.user);
+
+        localStorage.setItem("accessToken", authData.accessToken);
+        localStorage.setItem("refreshToken", authData.refreshToken);
+    };
+
+    const logout = async () => {
+        try {
+            await axios.post("https://localhost:7281/api/Auth/logout", { refreshToken });
+        } catch (err) {
+            console.error("Logout failed:", err);
+        }
+        setAccessToken(null);
+        setRefreshToken(null);
+        setUser(null);
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+    };
+
+
+    return (
+        <AuthContext.Provider value={{ accessToken, refreshToken, user, setAuth, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+export const useAuth = () => {
+    const context = useContext(AuthContext);
+    if (!context)
+        throw new Error("useAuth must be used within an AuthProvider");
+    return context;
+};
+
+
+// backend controller
+using AuroraEcho.Ticket.Application.DTOs;
+using AuroraEcho.Ticket.Application.Exceptions;
+using AuroraEcho.Ticket.Application.Services;
+using AuroraEcho.Ticket.Application.ServicesImpl;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+
+namespace AuroraEcho.Ticket.API.Controllers
+{
+    
+    [Route("api/[controller]")]
+    [ApiController]
+    public class TicketController : ControllerBase
+    {
+        private readonly ITicketService _ticketService;
+        private readonly ILogger<TicketController> _logger;
+        public TicketController(ITicketService ticketService, ILogger<TicketController> logger)
+        {
+            _ticketService = ticketService;
+            _logger = logger;
+        }
+
+        [HttpGet("GetAllTicketsOfUser")]
+        public async Task<ActionResult<IEnumerable<TicketDTO>>> GetAllTickets(string email)
+        {
+            _logger.LogInformation("Received request to get all tickets");
+
+            try
+            {
+                var tickets = await _ticketService.GetAllTickets();
+                var userTickets = tickets
+                    .Where(t => !string.IsNullOrEmpty(t.EmailId) &&
+                                t.EmailId.Equals(email, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+
+                return Ok(userTickets);
+            }
+            // 🆕 Added: handle custom exception types
+            catch (NotFoundException ex)
+            {
+                _logger.LogWarning(ex, "No tickets found.");
+                return NotFound(new { message = ex.Message });
+            }
+            catch (AuroraEchoException ex)
+            {
+                _logger.LogError(ex, "Application-level error occurred while fetching tickets.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error while fetching tickets.");
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Internal Server Error" });
+            }
+        }
+    }
+}
+
+here i want to make you strick things to implement
+1. i don't want show the coloumn of users in the list of tickets where we are getting
+2. now we dont want to send the accesstoken to the backend we will just use that access token to get the user and then the user email in the frontend itself
+3. then we will use this email to call the api sending the email as a parameter to get all the tickets for that user from frontend
+4. we dont want to authorize in backend 
+5. tell me what to change to get this requirement perfectly working fine 
+6. the aim is to get the all the tickets of the user related has 
+7. we have used react, typescript, vite for the frontend and asp.net web api for backend
