@@ -1,0 +1,1630 @@
+// features/accounts/users/components/AddUserDialog.tsx
+import { useState, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
+import { Combobox } from "@/components/ui/combobox";
+import { addUser, AddUserPayload } from "../services/addUserService";
+
+type Role =
+  | "DomainAdmin"
+  |"ProjectAdmin"
+  | "ReviewManager"
+  |"Reviewer"
+  |"SystemAdministrator"
+  |"Client"
+  |"ProcessingManager"
+  |"ProcessingUser"
+  |"HostingManager"
+  |"HostingUser"
+  |"FinanceManager"
+  |"CaseTimeManager"
+  |"SalesForceManager" 
+  | "DcollectManager" 
+  | "DcollectUser";
+
+const ROLE_OPTIONS: Role[] = [
+  "DomainAdmin",
+  "ProjectAdmin",
+   "ReviewManager",
+  "Reviewer",
+  "SystemAdministrator",
+  "Client",
+  "ProcessingManager",
+  "ProcessingUser",
+  "HostingManager",
+  "HostingUser",
+  "FinanceManager",
+  "CaseTimeManager",
+  "SalesForceManager", 
+  "DcollectManager", 
+  "DcollectUser"
+];
+
+// Dummy directory for manager dropdown
+const DIRECTORY = [
+  {
+    name: "Alice Johnson",
+    email: "alice.johnson@aurora.com",
+    role: "Domain Admin" as Role,
+    status: "Active" as const,
+  },
+  {
+    name: "Brian Lee",
+    email: "brian.lee@aurora.com",
+    role: "Project Admin" as Role,
+    status: "Active" as const,
+  },
+  {
+    name: "Catherine Smith",
+    email: "catherine.smith@aurora.com",
+    role: "Reviewer" as Role,
+    status: "Inactive" as const,
+  },
+  {
+    name: "Daniel Roberts",
+    email: "daniel.roberts@aurora.com",
+    role: "User" as Role,
+    status: "Active" as const,
+  },
+  {
+    name: "Emily Clark",
+    email: "emily.clark@aurora.com",
+    role: "Review Manager" as Role,
+    status: "Active" as const,
+  },
+];
+
+export function AddUserDialog() {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role>("Client");
+  const [manager, setManager] = useState("");
+  // changes for addUserService
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const managerOptions = useMemo(
+    () =>
+      DIRECTORY.map((u) => ({
+        value: u.email,
+        label: `${u.name} (${u.email})`,
+      })),
+    []
+  );
+
+  const emailValid = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setRole("User");
+    setManager("");
+  };
+
+  const handleAdd = async () => {
+    if (!name.trim()) return toast.error("Name is required");
+    if (!email.trim() || !emailValid(email))
+      return toast.error("Enter a valid email");
+    // make payload
+    const payload: AddUserPayload = {
+      userName: name.trim(),
+      email: email.trim(),
+      password: "Default@123", // Default password, ideally should be set by user via email link
+      role: role,
+    };
+    console.log("🧾 User payload before API call:", payload);
+    try {
+      //issubmitting true
+      setIsSubmitting(true);
+
+      // call addUserService
+      await addUser(payload);
+
+      //success response
+      toast.success("User added successfully");
+
+      //resetform
+      resetForm();
+
+      //setopen false
+      setOpen(false);
+    } catch (err: any) {
+      // err.message comes from service normalization
+      toast.error(err?.message || "Failed to add user");
+      console.error("Add user failed:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Add User
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[560px]">
+        <DialogHeader>
+          <DialogTitle>Add User</DialogTitle>
+          <DialogDescription>
+            Create a new user account with role and status.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-2">
+          <div className="grid gap-2">
+            <Label htmlFor="add-name">Name *</Label>
+            <Input
+              id="add-name"
+              placeholder="Enter full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="add-email">Email *</Label>
+            <Input
+              id="add-email"
+              type="email"
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Role *</Label>
+            <Select value={role} onValueChange={(v: Role) => setRole(v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="add-manager">Reporting Manager *</Label>
+            <Combobox
+              options={managerOptions}
+              value={manager}
+              onValueChange={setManager}
+              placeholder="Select reporting manager"
+              searchPlaceholder="Search by name or email..."
+              emptyText="No managers found."
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          {/* <Button onClick={handleAdd}>Add</Button> */}
+          {/* Adding Changes */}
+          <Button onClick={handleAdd} disabled={isSubmitting}>
+            {isSubmitting ? "Adding..." : "Add"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// features/accounts/users/components/Dashboard.tsx
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Shield,
+  UserCog,
+  UserCheck,
+  Users,
+  ClipboardList,
+} from "lucide-react";
+
+type RoleStat = {
+  title: string;
+  value: number;
+  description: string;
+  icon: any;
+};
+
+const roleStats: RoleStat[] = [
+  {
+    title: "Super Admin",
+    value: 1,
+    description: "Full system control",
+    icon: Shield,
+  },
+  {
+    title: "Domain Admins",
+    value: 6,
+    description: "Manage domains & governance",
+    icon: UserCog,
+  },
+  {
+    title: "Project Admins",
+    value: 14,
+    description: "Manage projects & access",
+    icon: ClipboardList,
+  },
+  {
+    title: "Review Managers",
+    value: 5,
+    description: "Supervise review workflows",
+    icon: UserCheck,
+  },
+  {
+    title: "Reviewers",
+    value: 27,
+    description: "Perform document & code reviews",
+    icon: Users,
+  },
+];
+
+export function Dashboard() {
+  return (
+    <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
+      {roleStats.map((s) => {
+        const Icon = s.icon;
+        return (
+          <Card key={s.title}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{s.title}</CardTitle>
+              <Icon className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{s.value}</div>
+              <p className="text-xs text-muted-foreground">{s.description}</p>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+// features/accounts/users/components/EditUserDialog.tsx
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import type { User } from "./UsersDirectory";
+
+type Role =
+  | "Domain Admin"
+  | "Project Admin"
+  | "Review Manager"
+  | "Reviewer"
+  | "User";
+type Status = "Active" | "Inactive";
+
+const ROLE_OPTIONS: Role[] = [
+  "Domain Admin",
+  "Project Admin",
+  "Review Manager",
+  "Reviewer",
+  "User",
+];
+const STATUS_OPTIONS: Status[] = ["Active", "Inactive"];
+
+type EditUserDialogProps = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  user: User | null;
+};
+
+export function EditUserDialog({
+  open,
+  onOpenChange,
+  user,
+}: EditUserDialogProps) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role>("User");
+  const [status, setStatus] = useState<Status>("Active");
+
+  useEffect(() => {
+    if (user) {
+      setName(user.name);
+      setEmail(user.email);
+      setRole(user.role);
+      setStatus(user.status);
+    }
+  }, [user]);
+
+  const emailValid = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleSave = () => {
+    if (!user) return toast.error("No user selected");
+    if (!name.trim()) return toast.error("Name is required");
+    if (!email.trim() || !emailValid(email))
+      return toast.error("Enter a valid email");
+    toast.success("Changes saved");
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[560px]">
+        <DialogHeader>
+          <DialogTitle>Edit User</DialogTitle>
+          <DialogDescription>
+            Update user information, role, and status.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="grid gap-4 py-2">
+          <div className="grid gap-2">
+            <Label htmlFor="edit-name">Name *</Label>
+            <Input
+              id="edit-name"
+              placeholder="Enter full name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="edit-email">Email *</Label>
+            <Input
+              id="edit-email"
+              type="email"
+              placeholder="name@company.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Role *</Label>
+            <Select value={role} onValueChange={(v: Role) => setRole(v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((r) => (
+                  <SelectItem key={r} value={r}>
+                    {r}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Status *</Label>
+            <Select value={status} onValueChange={(v: Status) => setStatus(v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_OPTIONS.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave}>Save Changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// features/accounts/users/components/UserInfo.tsx
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ArrowLeft, Mail, Shield, Clock, CheckCircle2 } from "lucide-react";
+
+export function UserInfo() {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const email = searchParams.get("email");
+
+  // Mock user data - replace with actual data fetching
+  const user = {
+    name: "Alice Johnson",
+    email: email || "alice.johnson@aurora.com",
+    role: "Domain Admin",
+    status: "Active",
+    joinedDate: "January 15, 2024",
+    lastActive: "2 hours ago",
+    manager: "John Doe",
+    department: "Engineering",
+    projects: ["Project Alpha", "Project Beta", "Project Gamma"],
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header with Back Button */}
+      <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate("/accounts/users")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Users
+        </Button>
+      </div>
+
+      {/* User Profile Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-2xl">{user.name}</CardTitle>
+              <CardDescription className="flex items-center gap-2 mt-2">
+                <Mail className="h-4 w-4" />
+                {user.email}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium ${
+                  user.status === "Active"
+                    ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                    : "bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300"
+                }`}
+              >
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                {user.status}
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  Role
+                </div>
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <span className="font-medium">{user.role}</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  Department
+                </div>
+                <div className="font-medium">{user.department}</div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  Reporting Manager
+                </div>
+                <div className="font-medium">{user.manager}</div>
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  Joined Date
+                </div>
+                <div className="font-medium">{user.joinedDate}</div>
+              </div>
+
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">
+                  Last Active
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium">{user.lastActive}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Projects Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Assigned Projects</CardTitle>
+          <CardDescription>
+            Projects this user has access to
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {user.projects.map((project) => (
+              <div
+                key={project}
+                className="flex items-center justify-between p-3 rounded-lg border"
+              >
+                <span className="font-medium">{project}</span>
+                <Button variant="outline" size="sm">
+                  View Details
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// // features/accounts/users/components/UsersDirectory.tsx
+// import { useMemo, useState } from "react";
+// import {
+//   Card,
+//   CardHeader,
+//   CardTitle,
+//   CardDescription,
+//   CardContent,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Search, Edit3, Eye } from "lucide-react";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
+// import { useNavigate } from "react-router-dom";
+// import { usePagination } from "@/hooks/usePagination";
+// import { PaginationControls } from "@/components/ui/pagination-controls";
+
+// type Role =
+//   | "Domain Admin"
+//   | "Project Admin"
+//   | "Review Manager"
+//   | "Reviewer"
+//   | "User";
+// type Status = "Active" | "Inactive";
+
+// type User = {
+//   name: string;
+//   email: string;
+//   role: Role;
+//   status: Status;
+// };
+
+// // Dummy directory
+// const DIRECTORY: User[] = [
+//   {
+//     name: "Alice Johnson",
+//     email: "alice.johnson@aurora.com",
+//     role: "Domain Admin",
+//     status: "Active",
+//   },
+//   {
+//     name: "Brian Lee",
+//     email: "brian.lee@aurora.com",
+//     role: "Project Admin",
+//     status: "Active",
+//   },
+//   {
+//     name: "Catherine Smith",
+//     email: "catherine.smith@aurora.com",
+//     role: "Reviewer",
+//     status: "Inactive",
+//   },
+//   {
+//     name: "Daniel Roberts",
+//     email: "daniel.roberts@aurora.com",
+//     role: "User",
+//     status: "Active",
+//   },
+//   {
+//     name: "Emily Clark",
+//     email: "emily.clark@aurora.com",
+//     role: "Review Manager",
+//     status: "Active",
+//   },
+// ];
+
+// type UsersDirectoryProps = {
+//   onEditUser: (user: User) => void;
+// };
+
+// export function UsersDirectory({ onEditUser }: UsersDirectoryProps) {
+//   const navigate = useNavigate();
+//   const [searchQuery, setSearchQuery] = useState("");
+
+//   const suggestions = useMemo(
+//     () =>
+//       DIRECTORY.filter(
+//         (u) =>
+//           u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//           u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//           u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//           u.status.toLowerCase().includes(searchQuery.toLowerCase())
+//       ),
+//     [searchQuery]
+//   );
+
+//   const {
+//     currentPage,
+//     pageSize,
+//     totalPages,
+//     paginatedData: paginatedUsers,
+//     setCurrentPage,
+//     setPageSize,
+//   } = usePagination({ data: suggestions, initialPageSize: 10 });
+
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <CardTitle>Users</CardTitle>
+//         <CardDescription>Manage user access and permissions</CardDescription>
+//       </CardHeader>
+//       <CardContent>
+//         <div className="relative mb-4">
+//           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//           <Input
+//             placeholder="Search by name, email, role, or status..."
+//             value={searchQuery}
+//             onChange={(e) => setSearchQuery(e.target.value)}
+//             className="pl-10"
+//           />
+//         </div>
+
+//         <Table>
+//           <TableHeader>
+//             <TableRow>
+//               <TableHead>Name</TableHead>
+//               <TableHead>Email</TableHead>
+//               <TableHead>Role</TableHead>
+//               <TableHead>Status</TableHead>
+//               <TableHead className="text-right">Actions</TableHead>
+//             </TableRow>
+//           </TableHeader>
+//           <TableBody>
+//             {paginatedUsers.map((u) => (
+//               <TableRow key={u.email}>
+//                 <TableCell className="font-medium">{u.name}</TableCell>
+//                 <TableCell>{u.email}</TableCell>
+//                 <TableCell>{u.role}</TableCell>
+//                 <TableCell>
+//                   <span
+//                     className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+//                       u.status === "Active"
+//                         ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+//                         : "bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300"
+//                     }`}
+//                   >
+//                     {u.status}
+//                   </span>
+//                 </TableCell>
+//                 <TableCell className="text-right">
+//                   <div className="flex justify-end gap-2">
+//                     <Button
+//                       variant="outline"
+//                       size="sm"
+//                       onClick={() => onEditUser(u)}
+//                     >
+//                       <Edit3 className="h-3 w-3 mr-1" />
+//                       Edit
+//                     </Button>
+//                     <Button
+//                       variant="outline"
+//                       size="sm"
+//                       onClick={() =>
+//                         navigate(
+//                           `/accounts/users?email=${encodeURIComponent(
+//                             u.email
+//                           )}`
+//                         )
+//                       }
+//                     >
+//                       <Eye className="h-3 w-3 mr-1" />
+//                       View
+//                     </Button>
+//                   </div>
+//                 </TableCell>
+//               </TableRow>
+//             ))}
+//           </TableBody>
+//         </Table>
+
+//         <PaginationControls
+//           currentPage={currentPage}
+//           totalPages={totalPages}
+//           pageSize={pageSize}
+//           totalItems={suggestions.length}
+//           onPageChange={setCurrentPage}
+//           onPageSizeChange={setPageSize}
+//         />
+
+//         {suggestions.length === 0 && searchQuery && (
+//           <p className="text-sm text-muted-foreground text-center py-6">
+//             No users found.
+//           </p>
+//         )}
+//       </CardContent>
+//     </Card>
+//   );
+// }
+
+// export type { User };
+
+// features/accounts/users/components/UsersDirectory.tsx
+// import { useMemo, useState, useEffect } from "react";
+// import {
+//   Card,
+//   CardHeader,
+//   CardTitle,
+//   CardDescription,
+//   CardContent,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Search, Edit3, Eye, Loader2 } from "lucide-react";
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from "@/components/ui/table";
+// import { useNavigate } from "react-router-dom";
+// import { usePagination } from "@/hooks/usePagination";
+// import { PaginationControls } from "@/components/ui/pagination-controls";
+// import { getAllUsers, type User } from "../services/api/UserApi";
+
+// type UsersDirectoryProps = {
+//   onEditUser: (user: User) => void;
+// };
+
+// export function UsersDirectory({ onEditUser }: UsersDirectoryProps) {
+//   const navigate = useNavigate();
+//   const [searchQuery, setSearchQuery] = useState("");
+//   const [users, setUsers] = useState<User[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // Fetch users from API on component mount
+//   useEffect(() => {
+//     const fetchUsers = async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
+//         const response = await getAllUsers();
+//         setUsers(response.users);
+//       } catch (err) {
+//         setError(err instanceof Error ? err.message : "Failed to fetch users");
+//         console.error("Error fetching users:", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchUsers();
+//   }, []);
+
+//   const suggestions = useMemo(
+//     () =>
+//       users.filter(
+//         (u) =>
+//           u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//           u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//           u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//           u.status.toLowerCase().includes(searchQuery.toLowerCase())
+//       ),
+//     [users, searchQuery]
+//   );
+
+//   const {
+//     currentPage,
+//     pageSize,
+//     totalPages,
+//     paginatedData: paginatedUsers,
+//     setCurrentPage,
+//     setPageSize,
+//   } = usePagination({ data: suggestions, initialPageSize: 10 });
+
+//   return (
+//     <Card>
+//       <CardHeader>
+//         <CardTitle>Users</CardTitle>
+//         <CardDescription>Manage user access and permissions</CardDescription>
+//       </CardHeader>
+//       <CardContent>
+//         <div className="relative mb-4">
+//           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+//           <Input
+//             placeholder="Search by name, email, role, or status..."
+//             value={searchQuery}
+//             onChange={(e) => setSearchQuery(e.target.value)}
+//             className="pl-10"
+//             disabled={loading}
+//           />
+//         </div>
+
+//         {loading && (
+//           <div className="flex justify-center items-center py-8">
+//             <Loader2 className="h-8 w-8 animate-spin text-primary" />
+//             <span className="ml-2 text-muted-foreground">Loading users...</span>
+//           </div>
+//         )}
+
+//         {error && (
+//           <div className="bg-destructive/10 text-destructive px-4 py-3 rounded-md mb-4">
+//             <p className="font-medium">Error loading users</p>
+//             <p className="text-sm">{error}</p>
+//             <Button
+//               variant="outline"
+//               size="sm"
+//               className="mt-2"
+//               onClick={() => window.location.reload()}
+//             >
+//               Retry
+//             </Button>
+//           </div>
+//         )}
+
+//         {!loading && !error && (
+//           <>
+//             <Table>
+//               <TableHeader>
+//                 <TableRow>
+//                   <TableHead>Name</TableHead>
+//                   <TableHead>Email</TableHead>
+//                   <TableHead>Role</TableHead>
+//                   <TableHead>Status</TableHead>
+//                   <TableHead className="text-right">Actions</TableHead>
+//                 </TableRow>
+//               </TableHeader>
+//               <TableBody>
+//                 {paginatedUsers.map((u) => (
+//                   <TableRow key={u.email}>
+//                     <TableCell className="font-medium">{u.name}</TableCell>
+//                     <TableCell>{u.email}</TableCell>
+//                     <TableCell>{u.role}</TableCell>
+//                     <TableCell>
+//                       <span
+//                         className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+//                           u.status === "Active"
+//                             ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+//                             : "bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300"
+//                         }`}
+//                       >
+//                         {u.status}
+//                       </span>
+//                     </TableCell>
+//                     <TableCell className="text-right">
+//                       <div className="flex justify-end gap-2">
+//                         <Button
+//                           variant="outline"
+//                           size="sm"
+//                           onClick={() => onEditUser(u)}
+//                         >
+//                           <Edit3 className="h-3 w-3 mr-1" />
+//                           Edit
+//                         </Button>
+//                         <Button
+//                           variant="outline"
+//                           size="sm"
+//                           onClick={() =>
+//                             navigate(
+//                               `/accounts/users?email=${encodeURIComponent(
+//                                 u.email
+//                               )}`
+//                             )
+//                           }
+//                         >
+//                           <Eye className="h-3 w-3 mr-1" />
+//                           View
+//                         </Button>
+//                       </div>
+//                     </TableCell>
+//                   </TableRow>
+//                 ))}
+//               </TableBody>
+//             </Table>
+
+//             <PaginationControls
+//               currentPage={currentPage}
+//               totalPages={totalPages}
+//               pageSize={pageSize}
+//               totalItems={suggestions.length}
+//               onPageChange={setCurrentPage}
+//               onPageSizeChange={setPageSize}
+//             />
+
+//             {suggestions.length === 0 && searchQuery && (
+//               <p className="text-sm text-muted-foreground text-center py-6">
+//                 No users found.
+//               </p>
+//             )}
+
+//             {suggestions.length === 0 && !searchQuery && users.length === 0 && (
+//               <p className="text-sm text-muted-foreground text-center py-6">
+//                 No users available.
+//               </p>
+//             )}
+//           </>
+//         )}
+//       </CardContent>
+//     </Card>
+//   );
+// }
+
+// export type { User };
+
+import { useMemo, useState } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Edit3, Eye, AlertCircle, Loader2 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useNavigate } from "react-router-dom";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
+import { useUsers } from "../hooks/UseUsers";
+import type { User } from "../types/User.Types";
+
+type UsersDirectoryProps = {
+  onEditUser: (user: User) => void;
+};
+
+export function UsersDirectory({ onEditUser }: UsersDirectoryProps) {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch users from API
+  const { users, isLoading, error, refetch } = useUsers();
+
+  // Filter users based on search query
+  const filteredUsers = useMemo(
+    () =>
+      users.filter(
+        (u) =>
+          u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          u.status.toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [users, searchQuery]
+  );
+
+  const {
+    currentPage,
+    pageSize,
+    totalPages,
+    paginatedData: paginatedUsers,
+    setCurrentPage,
+    setPageSize,
+  } = usePagination({ data: filteredUsers, initialPageSize: 10 });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Users</CardTitle>
+        <CardDescription>Manage user access and permissions</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name, email, role, or status..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">Loading users...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="flex items-center gap-2 p-4 mb-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-950 dark:border-red-800">
+            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                Error loading users
+              </p>
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {error.message}
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={refetch}>
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {/* Users Table */}
+        {!isLoading && !error && (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedUsers.map((u) => (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">{u.name}</TableCell>
+                    <TableCell>{u.email}</TableCell>
+                    <TableCell>{u.role}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${
+                          u.status === "Active"
+                            ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                            : "bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300"
+                        }`}
+                      >
+                        {u.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onEditUser(u)}
+                        >
+                          <Edit3 className="h-3 w-3 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            navigate(
+                              `/accounts/users?email=${encodeURIComponent(
+                                u.email
+                              )}`
+                            )
+                          }
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              totalItems={filteredUsers.length}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={setPageSize}
+            />
+
+            {/* No Results */}
+            {filteredUsers.length === 0 && searchQuery && (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No users found matching "{searchQuery}".
+              </p>
+            )}
+
+            {/* No Data */}
+            {users.length === 0 && !searchQuery && (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No users available.
+              </p>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export type { User };
+
+
+import { useState, useEffect } from 'react';
+import { UserApiService } from '../services/api/UserApi.service';
+import type { User } from '../components/UsersDirectory';
+
+
+interface UseUsersResult {
+  users: User[];
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+/**
+ * Custom hook to fetch and manage users data
+ */
+export function useUsers(): UseUsersResult {
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const fetchedUsers = await UserApiService.getAllUsers();
+      setUsers(fetchedUsers);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error('Failed to fetch users'));
+      console.error('Error fetching users:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  return {
+    users,
+    isLoading,
+    error,
+    refetch: fetchUsers,
+  };
+}
+
+// features/accounts/users/pages/Users.tsx
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Dashboard } from "../components/Dashboard";
+import { UsersDirectory } from "../components/UsersDirectory";
+import { AddUserDialog } from "../components/AddUserDialog";
+import { EditUserDialog } from "../components/EditUserDialog";
+import { UserInfo } from "../components/UserInfo";
+import type { User } from "../components/UsersDirectory";
+
+export default function Users() {
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get("email");
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setEditOpen(true);
+  };
+
+  // If email param exists, show user info view
+  if (email) {
+    return <UserInfo />;
+  }
+
+  // Otherwise show accounts list view
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Accounts</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage user access and permissions
+          </p>
+        </div>
+
+        <div className="flex gap-2">
+          <AddUserDialog />
+        </div>
+      </div>
+
+      {/* Dashboard - Role Stats */}
+      <Dashboard />
+
+      {/* Users Directory */}
+      <UsersDirectory onEditUser={handleEditUser} />
+
+      {/* Edit User Dialog */}
+      <EditUserDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        user={selectedUser}
+      />
+    </div>
+  );
+}
+
+import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
+
+// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7280';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7066';
+
+// Create axios instance with default config
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor - add auth token
+axiosInstance.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    // Get token from sessionStorage (or wherever you store it)
+    const token = sessionStorage.getItem('auth_access_token');
+    
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor - handle errors globally
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Handle unauthorized - redirect to login or refresh token
+      console.error('Unauthorized access - redirecting to login');
+      // You can dispatch a logout action here or redirect
+      // window.location.href = '/login';
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+export default axiosInstance;
+
+import axiosInstance from './AxiosConfig';
+import axios from 'axios';
+import type { User, UserApiResponse } from '../../types/User.Types';
+
+/**
+ * Maps backend API response to frontend User type
+ */
+function mapApiResponseToUser(apiUser: UserApiResponse): User {
+  return {
+    id: apiUser.id,
+    name: apiUser.userName,
+    email: apiUser.email,
+    // Default role - you'll need to get this from your backend
+    // For now, we'll default to "User", but you should have a roles endpoint
+    role: "DcollectUser",
+    status: apiUser.isActive ? "Active" : "Inactive",
+  };
+}
+
+/**
+ * User API Service
+ */
+export class UserApiService {
+  /**
+   * Fetches all users from the backend
+   */
+  static async getAllUsers(): Promise<User[]> {
+    try {
+      const response = await axiosInstance.get<UserApiResponse[]>('/api/User/users');
+      
+      // Map API response to frontend User type
+      const users = response.data.map(mapApiResponseToUser);
+      
+      return users;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching users:', error.message);
+        throw new Error(
+          error.response?.data?.message || 'Failed to fetch users'
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches a single user by ID
+   */
+  static async getUserById(userId: string): Promise<User> {
+    try {
+      const response = await axiosInstance.get<UserApiResponse>(
+        `/api/User/users/${userId}`
+      );
+      
+      return mapApiResponseToUser(response.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching user:', error.message);
+        throw new Error(
+          error.response?.data?.message || 'Failed to fetch user'
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Fetches a user by email
+   */
+  static async getUserByEmail(email: string): Promise<User | null> {
+    try {
+      const users = await this.getAllUsers();
+      return users.find(u => u.email.toLowerCase() === email.toLowerCase()) || null;
+    } catch (error) {
+      console.error('Error fetching user by email:', error);
+      throw error;
+    }
+  }
+}
+
+
+// src/services/userService.ts
+
+// Import Axios for making HTTP requests
+import axios from "axios";
+
+// Define your base API URL directly here (hardcoded for now)
+const API_BASE = "https://localhost:7066"; // Replace this with your actual backend URL
+
+// fine the shape (TypeScript interface) of the payload
+//    This ensures that only valid data gets passed to the function.
+export interface AddUserPayload {
+  userName: string;
+  email: string;
+  password: string;
+  role: string;
+}
+
+//  Create a pre-configured Axios instance
+//    This saves us from writing headers or baseURL repeatedly.
+const client = axios.create({
+  baseURL: API_BASE, //  All requests will use this as the prefix
+  headers: {
+    "Content-Type": "application/json", //  Always send JSON data
+  },
+  // timeout: 10000, // Optional: uncomment to auto-cancel requests after 10s
+});
+
+// 5️⃣ Actual API call — POST request to add a new user
+export const addUser = async (payload: AddUserPayload) => {
+  try {
+    // Makes a POST call to: https://your-api-endpoint.com/api/users
+    console.log("Posting to:", `${API_BASE}/api/User/register`);
+
+    const res = await client.post("/api/User/register", payload);
+
+    // Return response data (backend might send success message or created user object)
+    return res.data;
+
+  } catch (err: any) {
+    //  Catch any error (network, server, validation, etc.)
+
+    // Extract a readable message from backend or fallback to default
+    const message =
+      err?.response?.data?.message || // if backend sends { message: "..." }
+      err?.response?.data ||          // if backend sends plain string
+      err?.message ||                 // general axios error
+      "Unknown error";                // fallback
+
+    // Throw a clean error so UI components can handle it easily
+    throw new Error(message);
+  }
+};
+
+
+// export type Role =
+//   | "Domain Admin"
+//   | "Project Admin"
+//   | "Review Manager"
+//   | "Reviewer"
+//   | "User";
+
+  export type Role =
+  | "DomainAdmin"
+  |"ProjectAdmin"
+  | "ReviewManager"
+  |"Reviewer"
+  |"SystemAdministrator"
+  |"Client"
+  |"ProcessingManager"
+  |"ProcessingUser"
+  |"HostingManager"
+  |"HostingUser"
+  |"FinanceManager"
+  |"CaseTimeManager"
+  |"SalesForceManager" 
+  | "DcollectManager" 
+  | "DcollectUser";
+export type Status = "Active" | "Inactive";
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  status: Status;
+}
+
+// Backend API response type
+export interface UserApiResponse {
+  isActive: boolean;
+  id: string;
+  userName: string;
+  normalizedUserName: string;
+  email: string;
+  normalizedEmail: string;
+  emailConfirmed: boolean;
+  passwordHash: string;
+  securityStamp: string;
+  concurrencyStamp: string;
+  phoneNumber: string | null;
+  phoneNumberConfirmed: boolean;
+  twoFactorEnabled: boolean;
+  lockoutEnd: string | null;
+  lockoutEnabled: boolean;
+  accessFailedCount: number;
+}
+
+/////this is the api response for getAllusers for the UserDirectory.tsx
+[
+  {
+    "userName": "Jhon",
+    "email": "jhon@gmail.com",
+    "isActive": true,
+    "roles": [
+      "Client"
+    ]
+  },
+  {
+    "userName": "Prithvi",
+    "email": "prithvi@gmail.com",
+    "isActive": true,
+    "roles": [
+      "SystemAdministrator"
+    ]
+  },
+  {
+    "userName": "alex",
+    "email": "alex@gmail.com",
+    "isActive": true,
+    "roles": [
+      "SystemAdministrator"
+    ]
+  },
+  {
+    "userName": "stavik",
+    "email": "satvik@gmail.com",
+    "isActive": true,
+    "roles": [
+      "SystemAdministrator"
+    ]
+  },
+  {
+    "userName": "Arun",
+    "email": "arun@gmail.com",
+    "isActive": true,
+    "roles": [
+      "HostingUser"
+    ]
+  },
+  {
+    "userName": "Harsh",
+    "email": "harsh@gmail.com",
+    "isActive": true,
+    "roles": [
+      "HostingUser"
+    ]
+  },
+  {
+    "userName": "Abhinav",
+    "email": "abhinav@gmail.com",
+    "isActive": true,
+    "roles": [
+      "HostingManager"
+    ]
+  }
+]
+
+
+this is all the frontend code i need you to refactor the code with the best practice in the proper folder
+and i want you to do 
+1. don't use hard coded data for the users any where and remove evrything that is hardcoded 
+2. as above i have given you the api result so transform the front end fields respectively and map it well
+3. use everywhere the dynamic data required and sync it well everywhere (dashboard, directory, view, edit....)
+4. once the new user is added trigger and update the list of user automatically in the UserDicetory should be updated with the added user
+5. and put all the logic of frontend with the best practices
+6. make sure when we view a specific user then data of that user is only shown not hardcoded
+
